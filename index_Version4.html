@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>冠军跃动 — 运动能力分析器</title>
+  <style>
+    :root{
+      --blue-top:#0c57f0;
+      --blue-mid:#138bff;
+      --blue-bot:#05c8f6;
+      --muted: rgba(233,242,255,0.78);
+      --white-trans: rgba(255,255,255,0.06);
+      --accent: #ffd24d;
+      --accent-dark:#ffb300;
+      --glass: rgba(255,255,255,0.04);
+      --text:#eaf6ff;
+      --shadow: 0 12px 40px rgba(2,12,60,0.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family: "PingFang SC", "Microsoft Yahei", "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,var(--blue-top) 0%, var(--blue-mid) 48%, var(--blue-bot) 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      display:flex;flex-direction:column;
+      min-height:100vh;
+    }
+
+    /* Header: logo left, centered nav, phone right */
+    header{
+      display:flex;align-items:center;justify-content:space-between;padding:18px 40px;
+      position:relative;
+    }
+    .hdr-left{display:flex;align-items:center;gap:12px}
+    .hdr-left img{width:72px;height:56px;object-fit:contain;border-radius:6px;background:rgba(255,255,255,0.03);padding:6px}
+    .hdr-title{line-height:1}
+    .hdr-title .name{font-weight:700;font-size:16px}
+    .hdr-title .tag{font-size:12px;color:var(--muted);margin-top:2px}
+
+    nav.hdr-nav{
+      position:absolute;left:50%;transform:translateX(-50%);
+      display:flex;gap:28px;align-items:center;
+    }
+    nav.hdr-nav a{color:rgba(255,255,255,0.9);text-decoration:none;font-size:15px;opacity:0.95}
+
+    .hdr-right{display:flex;align-items:center;gap:12px}
+    .phone-bubble{
+      display:flex;align-items:center;gap:10px;background:var(--accent);color:#000;padding:8px 14px;border-radius:22px;
+      font-weight:800;box-shadow: 0 8px 28px rgba(255,170,60,0.18);
+    }
+    .btn-primary{
+      background:transparent;border:1px solid rgba(255,255,255,0.14);color:var(--text);padding:8px 12px;border-radius:8px;
+    }
+
+    /* Hero */
+    .hero{
+      display:flex;gap:28px;align-items:stretch;padding:34px 60px 12px;
+      flex:1;
+    }
+    .hero-left{flex:0 0 48%;display:flex;flex-direction:column;justify-content:center;padding:20px 8px}
+    .main-title{font-size:56px;font-weight:900;margin:6px 0;color:#fff;line-height:1.02;text-shadow:0 10px 30px rgba(2,10,60,0.3)}
+    .main-bullets{margin-top:18px;color:var(--muted);font-size:16px;line-height:1.9}
+    .bullet{display:flex;align-items:flex-start;gap:12px}
+    .dot{width:10px;height:10px;background:rgba(255,255,255,0.14);border-radius:50%;margin-top:6px;flex:0 0 10px}
+    .cta-cta{margin-top:26px}
+    .cta-cta .cta-btn{
+      background:transparent;border:1px solid rgba(255,255,255,0.12);color:#fff;padding:12px 18px;border-radius:8px;font-weight:700;
+    }
+
+    /* left arrow (carousel style) */
+    .left-arrow{
+      position:absolute;left:22px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
+      border:2px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;
+    }
+
+    /* Right illustration area */
+    .hero-right{flex:0 0 52%;position:relative;display:flex;align-items:center;justify-content:center;padding:8px}
+    .illustration{
+      width:100%;max-width:780px;height:420px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.04);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      box-shadow: var(--shadow);
+      display:flex;align-items:center;justify-content:center;position:relative;
+    }
+    .illustration img{width:110%;height:110%;object-fit:cover;transform:translateX(6%);filter:contrast(1.02) saturate(0.9)}
+
+    /* pagination dots bottom center */
+    .pager{position:absolute;left:50%;transform:translateX(-50%);bottom:30px;display:flex;gap:10px}
+    .pager span{width:42px;height:6px;background:rgba(255,255,255,0.18);border-radius:6px;display:inline-block;opacity:0.6}
+    .pager span.active{background:#fff;opacity:1;width:56px}
+
+    /* floating right vertical buttons */
+    .float-tools{position:fixed;right:8px;top:46%;display:flex;flex-direction:column;gap:12px;z-index:60}
+    .float-btn{width:46px;height:92px;background:linear-gradient(180deg,#ff9000,#ffb24d);border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;text-orientation:mixed;font-weight:700;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,0.25)}
+    .float-btn.pink{background:linear-gradient(180deg,#7b6bff,#a07fff)}
+    .float-btn.purple{background:linear-gradient(180deg,#6bd3ff,#4aa6ff)}
+
+    /* Result card (below hero) */
+    .result{
+      margin:18px 60px;background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.04);color:var(--text);max-width:1100px;align-self:center;
+    }
+    .small{color:var(--muted);font-size:13px;margin-bottom:8px}
+
+    /* bars */
+    .bars{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    .bar-row{display:flex;align-items:center;gap:12px}
+    .bar-row .name{width:72px;color:var(--muted)}
+    .progress{height:14px;background:rgba(255,255,255,0.06);border-radius:8px;flex:1;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,#ffd24d,#ff8a37);width:0%}
+    .score{min-width:84px;text-align:right;color:var(--muted);font-weight:600}
+
+    footer{padding:18px 40px;color:var(--muted);font-size:13px;text-align:center;margin-top:auto}
+    @media (max-width:980px){
+      .hero{flex-direction:column;padding:18px}
+      .hero-left,.hero-right{width:100%;flex:none}
+      .main-title{font-size:34px}
+      nav.hdr-nav{display:none}
+      header{padding:12px}
+      .illustration{height:300px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hdr-left">
+      <!-- logo.png 请放在本目录 -->
+      <img src="logo.png" alt="冠军跃动 Logo" id="logoImg">
+      <div class="hdr-title">
+        <div class="name">冠军跃动</div>
+        <div class="tag">智慧体育解决方案</div>
+      </div>
+    </div>
+
+    <nav class="hdr-nav" aria-label="主导航">
+      <a href="#">首页</a>
+      <a href="#">产品中心</a>
+      <a href="#">案例中心</a>
+      <a href="#">新闻中心</a>
+      <a href="#">关于我们</a>
+      <a href="#">加入我们</a>
+    </nav>
+
+    <div class="hdr-right">
+      <div class="phone-bubble" title="联系电话">
+        <!-- phone icon (simple) -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 2px 2px rgba(0,0,0,0.12))">
+          <path d="M6.62 10.79a15.054 15.054 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1C9.39 21 3 14.61 3 6a1 1 0 011-1h2.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.25 1.01l-2.2 2.21z" fill="#000"/>
+        </svg>
+        <span>13368461175</span>
+      </div>
+      <button class="btn-primary">合作咨询</button>
+    </div>
+  </header>
+
+  <main style="flex:1;display:flex;flex-direction:column">
+    <section class="hero">
+      <div class="left-arrow" title="上一页">
+        <!-- simple chevron -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="hero-left">
+        <div class="main-title">智慧体育引领者</div>
+        <div class="main-bullets">
+          <div class="bullet"><div class="dot"></div><div>同时满足幼小、普教、高教全覆盖</div></div>
+          <div class="bullet"><div class="dot"></div><div>业内首家纯视觉方案助力体育中考和高校大规模体测</div></div>
+          <div class="bullet"><div class="dot"></div><div>覆盖全国 累计学生使用人数8500W+</div></div>
+        </div>
+
+        <div class="cta-cta">
+          <button class="cta-btn">预约演示 →</button>
+        </div>
+
+        <div style="margin-top:26px" class="control-panel" id="controls">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;color:var(--muted)">输入得分用于生成个性化分析（0-100）</div>
+          <div class="input-row" style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:10px;align-items:center">
+              <label style="width:64px;color:var(--muted);font-size:14px">力量</label>
+              <input type="range" id="strengthRange" min="0" max="100" step="1" value="67" style="flex:1">
+              <input type="number" id="strengthNum" min="0" max="100" value="67" style="width:72px;padding:6px;border-radius:6px;border:0;background:rgba(255,255,255,0.04);color:var(--text)">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <label style="width:64px;color:var(--muted);font-size:14px">协调</label>
+              <input type="range" id="coordRange" min="0" max="100" step="1" value="78" style="flex:1">
+              <input type="number" id="coordNum" min="0" max="100" value="78" style="width:72px;padding:6px;border-radius:6px;border:0;background:rgba(255,255,255,0.04);color:var(--text)">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <label style="width:64px;color:var(--muted);font-size:14px">耐力</label>
+              <input type="range" id="endRange" min="0" max="100" step="1" value="89" style="flex:1">
+              <input type="number" id="endNum" min="0" max="100" value="89" style="width:72px;padding:6px;border-radius:6px;border:0;background:rgba(255,255,255,0.04);color:var(--text)">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+            <button id="analyzeBtn" class="btn-primary" style="padding:10px 16px;font-weight:800">开始分析</button>
+            <button id="resetBtn" class="btn-primary" style="opacity:0.9">重置示例分数</button>
+            <div style="margin-left:auto;color:var(--muted);font-size:13px">权重：力量40% 协调35% 耐力25%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="illustration">
+          <!-- illustration.png 请放在本目录 -->
+          <img src="illustration.png" alt="场地示意">
+          <div class="pager" aria-hidden="true">
+            <span class="active"></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="result" id="resultCard" aria-live="polite">
+      <h3 style="margin:0 0 6px">====== 运动能力分析结果 ======</h3>
+      <div class="small" id="summaryLine">请点击“开始分析”以查看结果</div>
+      <div style="height:1px;background:rgba(255,255,255,0.03);margin:10px 0;border-radius:2px"></div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <div id="levelBox" style="font-size:16px;font-weight:700">—</div>
+          <div class="small" id="weightedBox">—</div>
+
+          <div style="margin-top:12px">
+            <div style="font-weight:700;margin-bottom:6px">📌 核心短板定位（由弱到强）</div>
+            <div style="display:flex;gap:12px" id="shortlist">
+              <div style="flex:1;background:var(--white-trans);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)" id="s1">1. —</div>
+              <div style="flex:1;background:var(--white-trans);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)" id="s2">2. —</div>
+              <div style="flex:1;background:var(--white-trans);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)" id="s3">3. —</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:320px">
+          <div style="font-weight:700">🎯 科学训练提升建议</div>
+          <div class="training small" id="trainingTips">
+            <ul><li>请先点击 “开始分析” 生成建议。</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,0.03);margin:10px 0;border-radius:2px"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="flex:1;min-width:420px">
+          <div style="font-weight:700;margin-bottom:8px">📈 能力可视化 (0-100 分)</div>
+          <div class="bars">
+            <div class="bar-row">
+              <div class="name">力量</div>
+              <div class="progress"><i id="barStrength" style="width:67%"></i></div>
+              <div class="score" id="scoreStrength">67.0/100</div>
+            </div>
+            <div class="bar-row">
+              <div class="name">协调</div>
+              <div class="progress"><i id="barCoord" style="width:78%"></i></div>
+              <div class="score" id="scoreCoord">78.0/100</div>
+            </div>
+            <div class="bar-row">
+              <div class="name">耐力</div>
+              <div class="progress"><i id="barEnd" style="width:89%"></i></div>
+              <div class="score" id="scoreEnd">89.0/100</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="min-width:240px">
+          <div style="font-weight:700;margin-bottom:6px">导出结果</div>
+          <div style="display:flex;gap:8px">
+            <button id="copyBtn" style="background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer">复制到剪贴板</button>
+            <button id="downloadBtn" style="background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer">下载为文本</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      页面为静态演示（本地），算法基于：力量40% / 协调35% / 耐力25%。等级映射：0-100 映射到 1-9 级。
+    </footer>
+  </main>
+
+  <!-- 右侧浮动按钮 -->
+  <div class="float-tools" aria-hidden="true">
+    <div class="float-btn" title="立即咨询">立即咨询</div>
+    <div class="float-btn pink" title="预约演示">预约演示</div>
+    <div class="float-btn purple" title="了解更多">了解更多</div>
+  </div>
+
+  <script>
+    // 与之前逻辑一致：权重与计算，DOM 交互
+    const WEIGHTS = { strength: 0.40, coordination: 0.35, endurance: 0.25 };
+    function clampScore(x){ x=Number(x); if(Number.isNaN(x)) return 0; if(x<0) return 0; if(x>100) return 100; return x; }
+    function gradeLabel(score){ if(score>=85) return "良好"; if(score>=60) return "一般"; return "较弱"; }
+    function computeWeighted(s,c,e){ return s*WEIGHTS.strength + c*WEIGHTS.coordination + e*WEIGHTS.endurance; }
+    function scoreToLevel(score){ let lvl = Math.floor(score/100*8)+1; if(lvl<1) lvl=1; if(lvl>9) lvl=9; return lvl; }
+
+    // DOM bindings
+    const strengthRange = document.getElementById('strengthRange'), strengthNum = document.getElementById('strengthNum');
+    const coordRange = document.getElementById('coordRange'), coordNum = document.getElementById('coordNum');
+    const endRange = document.getElementById('endRange'), endNum = document.getElementById('endNum');
+
+    const barStrength = document.getElementById('barStrength'), barCoord = document.getElementById('barCoord'), barEnd = document.getElementById('barEnd');
+    const scoreStrength = document.getElementById('scoreStrength'), scoreCoord = document.getElementById('scoreCoord'), scoreEnd = document.getElementById('scoreEnd');
+
+    const analyzeBtn = document.getElementById('analyzeBtn'), resetBtn = document.getElementById('resetBtn');
+    const levelBox = document.getElementById('levelBox'), weightedBox = document.getElementById('weightedBox'), summaryLine = document.getElementById('summaryLine');
+    const s1 = document.getElementById('s1'), s2 = document.getElementById('s2'), s3 = document.getElementById('s3'), trainingTips = document.getElementById('trainingTips');
+
+    const copyBtn = document.getElementById('copyBtn'), downloadBtn = document.getElementById('downloadBtn');
+
+    function bindRangeAndNumber(rangeEl, numEl){
+      rangeEl.addEventListener('input', ()=> numEl.value = rangeEl.value);
+      numEl.addEventListener('input', ()=> {
+        let v = Number(numEl.value); if(Number.isNaN(v)) v = 0; if(v<0) v=0; if(v>100) v=100; rangeEl.value = v;
+      });
+    }
+    bindRangeAndNumber(strengthRange,strengthNum);
+    bindRangeAndNumber(coordRange,coordNum);
+    bindRangeAndNumber(endRange,endNum);
+
+    function renderVisualization(s,c,e){
+      const ss=clampScore(s), cc=clampScore(c), ee=clampScore(e);
+      barStrength.style.width = ss + '%'; barCoord.style.width = cc + '%'; barEnd.style.width = ee + '%';
+      scoreStrength.textContent = ss.toFixed(1) + "/100"; scoreCoord.textContent = cc.toFixed(1) + "/100"; scoreEnd.textContent = ee.toFixed(1) + "/100";
+    }
+
+    function produceTrainingTips(level,s,c,e){
+      const arr = [{k:'力量',v:s},{k:'协调',v:c},{k:'耐力',v:e}].sort((a,b)=>a.v-b.v);
+      return `<ul>
+        <li>力量训练：每周 2-4 次，复合力量练习（深蹲/硬拉/卧推/俯卧撑/哑铃推举），每次 30-60 分钟。优先级：${(arr[0].k==='力量')? '高' : '中'}</li>
+        <li>协调性训练：每周 2-3 次，平衡/敏捷/核心稳定练习（单腿平衡、敏捷梯、环形运动），每次 20-40 分钟。优先级：${(arr[0].k==='协调')? '高' : '低'}</li>
+        <li>耐力训练：每周 2-5 次，中低强度有氧（慢跑/骑行/划船），逐步增加时长（20 -> 45-60 ��钟）。优先级：${(arr[0].k==='耐力')? '高' : '低'}</li>
+      </ul>`;
+    }
+
+    function analyzeAndRender(){
+      const s = clampScore(strengthNum.value), c = clampScore(coordNum.value), e = clampScore(endNum.value);
+      const weighted = computeWeighted(s,c,e), level = scoreToLevel(weighted);
+      const items = [{name:'力量',v:s},{name:'协调',v:c},{name:'耐力',v:e}].sort((a,b)=>a.v-b.v);
+
+      levelBox.textContent = `🏅 智能确定当前运动等级： ${level} 级 (1-9级)`;
+      weightedBox.innerHTML = `📊 综合加权得分: <strong style="color:#fff">${weighted.toFixed(1)}</strong>/100<br><span class="small"> (权重: 力量40% | 协调35% | 耐力25%)</span>`;
+      summaryLine.textContent = `（当前样本分）力量 ${s.toFixed(1)} / 协调 ${c.toFixed(1)} / 耐力 ${e.toFixed(1)}`;
+
+      // short list
+      if (s1 && s2 && s3){
+        s1.innerHTML = `1. ${items[0].name} - 得分: ${items[0].v.toFixed(1)} （${gradeLabel(items[0].v)}）`;
+        s2.innerHTML = `2. ${items[1].name} - 得分: ${items[1].v.toFixed(1)} （${gradeLabel(items[1].v)}）`;
+        s3.innerHTML = `3. ${items[2].name} - 得分: ${items[2].v.toFixed(1)} （${gradeLabel(items[2].v)}）`;
+      }
+      if (trainingTips) trainingTips.innerHTML = produceTrainingTips(level,s,c,e);
+      renderVisualization(s,c,e);
+    }
+
+    analyzeBtn.addEventListener('click', analyzeAndRender);
+    resetBtn.addEventListener('click', ()=> {
+      strengthRange.value=67; strengthNum.value=67;
+      coordRange.value=78; coordNum.value=78;
+      endRange.value=89; endNum.value=89;
+      analyzeAndRender();
+    });
+
+    function buildExportText(){
+      const s = clampScore(strengthNum.value), c = clampScore(coordNum.value), e = clampScore(endNum.value);
+      const weighted = computeWeighted(s,c,e), level = scoreToLevel(weighted);
+      const items = [{name:'力量',v:s},{name:'协调',v:c},{name:'耐力',v:e}].sort((a,b)=>a.v-b.v);
+      let txt = "====== 运动能力分析结果 ======\n";
+      txt += `智能确定当前运动等级： ${level} 级 (1-9级)\n`;
+      txt += `综合加权得分: ${weighted.toFixed(1)}/100 (权重: 力量40% | 协调35% | 耐力25%)\n\n`;
+      txt += "核心短板定位（由弱到强）\n";
+      txt += `1. ${items[0].name} - 得分: ${items[0].v.toFixed(1)} （${gradeLabel(items[0].v)}）\n`;
+      txt += `2. ${items[1].name} - 得分: ${items[1].v.toFixed(1)} （${gradeLabel(items[1].v)}）\n`;
+      txt += `3. ${items[2].name} - 得分: ${items[2].v.toFixed(1)} （${gradeLabel(items[2].v)}）\n\n`;
+      txt += "训练建议：\n";
+      txt += "力量训练：每周 2-4 次，复合力量练习（深蹲/硬拉/卧推），每次 30-60 分钟。\n";
+      txt += "协调性训练：每周 2-3 次，平衡/敏捷/核心训练，每次 20-40 分钟。\n";
+      txt += "耐力训练：每周 2-5 次，中低强度有氧，逐步增加时长（20 -> 45-60 分钟）。\n\n";
+      txt += "能力可视化 (0-100 分)：\n";
+      txt += `力量: ${s.toFixed(1)}/100\n`;
+      txt += `协调: ${c.toFixed(1)}/100\n`;
+      txt += `耐力: ${e.toFixed(1)}/100\n`;
+      return txt;
+    }
+
+    copyBtn.addEventListener('click', async ()=>{
+      const txt = buildExportText();
+      try{
+        await navigator.clipboard.writeText(txt);
+        copyBtn.textContent = "已复制 ✓";
+        setTimeout(()=> copyBtn.textContent = "复制到剪贴板", 2000);
+      }catch(e){ alert("复制失败，请手动复制。"); }
+    });
+
+    downloadBtn.addEventListener('click', ()=>{
+      const txt = buildExportText();
+      const blob = new Blob([txt],{type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'fitness_report.txt';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // initial render
+    analyzeAndRender();
+  </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运动能力智能分析系统</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Phosphor Icons (轻量级现代图标库) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- 配置 Tailwind 主题以匹配浅橙色风格 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316', // 主橙色
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #fed7aa; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+        
+        /* 页面过渡动画 */
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 进度条动画 */
+        .progress-bar-fill {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 隐藏数字输入框的上下箭头 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-primary-50 text-gray-800 font-sans antialiased overflow-hidden flex h-screen">
+
+    <!-- 侧边栏 (Sidebar) -->
+    <aside class="w-64 bg-white border-r border-primary-100 hidden md:flex flex-col shadow-sm z-10 relative">
+        <div class="h-16 flex items-center px-6 border-b border-primary-50">
+    <svg class="w-6 h-6 mr-2 text-primary-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M3 17L8.5 9.5L11.5 13L15 7L21 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="text-lg font-bold text-gray-900 tracking-tight">冠军<span class="text-primary-500">跃动</span></span>
+</div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-primary-50 text-primary-600 rounded-xl font-medium transition-colors">
+                <i class="ph ph-squares-four text-xl"></i> 分析控制台
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-primary-500 rounded-xl font-medium transition-colors">
+                <i class="ph ph-chart-line-up text-xl"></i> 历史使用数据
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-primary-500 rounded-xl font-medium transition-colors">
+                <i class="ph ph-users text-xl"></i> 学员管理
+            </a>
+        </nav>
+        <div class="p-4 border-t border-primary-50">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-primary-500 rounded-xl font-medium transition-colors">
+                <i class="ph ph-gear text-xl"></i> 系统设置
+            </a>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- 顶部导航 (Header) -->
+        <header class="h-16 bg-white border-b border-primary-100 shadow-sm flex items-center justify-between px-6 z-10">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-gray-500 hover:text-primary-500 transition-colors">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">能力评估中心</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-gray-400 hover:text-primary-500 transition-colors rounded-full hover:bg-primary-50">
+                    <i class="ph ph-bell text-xl"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-2 cursor-pointer pl-2 border-l border-gray-200">
+                    <img src="./陈杰.jpg" alt="User" class="w-8 h-8 rounded-full border border-primary-200">
+                    <span class="text-sm font-medium hidden sm:block">陈杰</span>
+                    <i class="ph ph-caret-down text-gray-400 text-xs hidden sm:block"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- 滚动内容区 -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-primary-50/50 p-4 sm:p-6 lg:p-8 relative">
+            
+            <div class="max-w-6xl mx-auto space-y-6">
+                <!-- 顶部说明 -->
+                <div class="bg-white rounded-2xl p-6 border border-primary-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 mb-1">新建能力评估</h2>
+                        <p class="text-sm text-gray-500">输入各项体测得分 (0-100)，系统将自动计算综合等级、定位短板并生成专属训练建议。</p>
+                    </div>
+                    <div class="flex gap-2 text-sm">
+                        <span class="px-3 py-1 bg-primary-50 text-primary-600 rounded-full border border-primary-100">权重: 力量40%</span>
+                        <span class="px-3 py-1 bg-primary-50 text-primary-600 rounded-full border border-primary-100">协调35%</span>
+                        <span class="px-3 py-1 bg-primary-50 text-primary-600 rounded-full border border-primary-100">耐力25%</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- 左侧表单输入区 -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="bg-white rounded-2xl p-6 border border-primary-100 shadow-sm hover:shadow-md transition-shadow">
+                            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="ph-fill ph-note-pencil text-primary-500"></i> 数据录入
+                            </h3>
+                            
+                            <form id="evalForm" class="space-y-5">
+                                <!-- 力量输入 -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">力量得分 (Strength)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="ph ph-barbell text-gray-400"></i>
+                                        </div>
+                                        <input type="number" id="inputStrength" min="0" max="100" required placeholder="0-100"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition-all outline-none bg-gray-50 focus:bg-white">
+                                    </div>
+                                </div>
+                                
+                                <!-- 协调输入 -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">协调得分 (Coordination)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="ph ph-person-simple-run text-gray-400"></i>
+                                        </div>
+                                        <input type="number" id="inputCoord" min="0" max="100" required placeholder="0-100"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition-all outline-none bg-gray-50 focus:bg-white">
+                                    </div>
+                                </div>
+
+                                <!-- 跳跃能力输入 -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">跳跃得分 (Endurance)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="ph ph-heartbeat text-gray-400"></i>
+                                        </div>
+                                        <input type="number" id="inputEndurance" min="0" max="100" required placeholder="0-100"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition-all outline-none bg-gray-50 focus:bg-white">
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="submitBtn" class="w-full mt-4 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl shadow-sm hover:shadow-lg hover:shadow-primary-500/30 transition-all flex items-center justify-center gap-2 group">
+                                    <i class="ph-bold ph-magic-wand group-hover:rotate-12 transition-transform"></i>
+                                    <span>生成智能分析报告</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 右侧结果展示区 (初始隐藏/占位) -->
+                    <div class="lg:col-span-8 flex flex-col gap-6 relative min-h-[400px]">
+                        
+                        <!-- 初始占位状态 -->
+                        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-2xl border border-primary-100 shadow-sm border-dashed">
+                            <div class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-4">
+                                <i class="ph ph-chart-pie-slice text-primary-400 text-4xl"></i>
+                            </div>
+                            <h3 class="text-gray-500 font-medium text-lg">等待数据录入</h3>
+                            <p class="text-gray-400 text-sm mt-1">提交左侧表单后，将在此生成可视化报告</p>
+                        </div>
+
+                        <!-- 加载中状态 -->
+                        <div id="loadingState" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-2xl z-20 hidden">
+                            <i class="ph ph-spinner-gap text-primary-500 text-4xl animate-spin mb-3"></i>
+                            <span class="text-primary-600 font-medium animate-pulse">正在调用后台算法分析中...</span>
+                        </div>
+
+                        <!-- 实际报告内容 (初始隐藏) -->
+                        <div id="reportContainer" class="hidden w-full space-y-6">
+                            
+                            <!-- 顶部核心得分 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 fade-in-up" style="animation-delay: 0.1s;">
+                                <!-- 综合得分 -->
+                                <div class="bg-white p-6 rounded-2xl border border-primary-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute -right-6 -top-6 text-primary-50 opacity-50">
+                                        <i class="ph-fill ph-medal text-9xl"></i>
+                                    </div>
+                                    <div class="relative z-10">
+                                        <p class="text-sm text-gray-500 font-medium mb-1">综合加权得分</p>
+                                        <div class="flex items-baseline gap-2">
+                                            <span id="resTotalScore" class="text-4xl font-black text-gray-800">--</span>
+                                            <span class="text-gray-400 font-medium">/100</span>
+                                        </div>
+                                        <div class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm font-medium border border-green-100">
+                                            <i class="ph ph-trend-up"></i> 表现出色
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 运动等级 -->
+                                <div class="bg-white p-6 rounded-2xl border border-primary-100 shadow-sm relative overflow-hidden flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-500 font-medium mb-1">当前运动等级</p>
+                                        <div class="flex items-baseline gap-1 mt-1">
+                                            <span id="resLevel" class="text-5xl font-black text-primary-500 drop-shadow-sm">L-</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400 mt-2">最高 L9 (智能动态评定)</p>
+                                    </div>
+                                    <div class="w-16 h-16 rounded-full bg-primary-50 border-4 border-primary-100 flex items-center justify-center">
+                                        <i class="ph-fill ph-ranking text-primary-400 text-3xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 能力雷达/进度条 -->
+                            <div class="bg-white p-6 rounded-2xl border border-primary-100 shadow-sm fade-in-up" style="animation-delay: 0.2s;">
+                                <h3 class="text-base font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <i class="ph-fill ph-chart-bar text-primary-500"></i> 能力可视化分析
+                                </h3>
+                                
+                                <div class="space-y-5" id="barChartContainer">
+                                    <!-- Bars will be generated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- 短板分析与建议 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in-up" style="animation-delay: 0.3s;">
+                                
+                                <!-- 短板定位 -->
+                                <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                    <h3 class="text-base font-bold text-red-800 mb-4 flex items-center gap-2">
+                                        <i class="ph-fill ph-warning-circle"></i> 核心短板定位
+                                    </h3>
+                                    <ul class="space-y-3" id="weaknessList">
+                                        <!-- Items injected by JS -->
+                                    </ul>
+                                </div>
+
+                                <!-- 训练建议 -->
+                                <div class="bg-primary-500 p-6 rounded-2xl text-white shadow-md shadow-primary-500/20">
+                                    <h3 class="text-base font-bold mb-4 flex items-center gap-2">
+                                        <i class="ph-fill ph-lightbulb"></i> 科学训练建议
+                                    </h3>
+                                    <div id="suggestionBox" class="text-sm text-primary-50 leading-relaxed bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
+                                        <!-- Injected by JS -->
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部 -->
+            <footer class="mt-12 py-6 text-center text-sm text-gray-400">
+               <p>&copy; 2026 冠军跃动团队</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- 交互逻辑 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('evalForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const emptyState = document.getElementById('emptyState');
+            const loadingState = document.getElementById('loadingState');
+            const reportContainer = document.getElementById('reportContainer');
+            
+            // 权重配置 (同 python 后端)
+            const WEIGHTS = {
+                strength: 0.40,
+                coordination: 0.35,
+                endurance: 0.25
+            };
+
+            // 模拟后端 API 调用
+            const mockSubmitAPI = (data) => {
+                return new Promise((resolve) => {
+                    // 模拟网络延迟 1.2秒
+                    setTimeout(() => {
+                        // 核心计算逻辑 (完全复刻 Python `fitness_report.py`)
+                        const s = parseFloat(data.strength);
+                        const c = parseFloat(data.coord);
+                        const e = parseFloat(data.endurance);
+
+                        // 1. 加权得分
+                        const weighted = (s * WEIGHTS.strength) + (c * WEIGHTS.coordination) + (e * WEIGHTS.endurance);
+                        
+                        // 2. 等级计算 (1-9)
+                        let level = Math.floor((weighted / 100.0) * 8.0) + 1;
+                        level = Math.max(1, Math.min(9, level));
+
+                        // 3. 评级标签函数
+                        const getGradeLabel = (score) => {
+                            if (score >= 85) return "良好";
+                            if (score >= 60) return "一般";
+                            return "较弱";
+                        };
+
+                        // 4. 短板排序
+                        const items = [
+                            { id: 'strength', name: "力量", score: s, grade: getGradeLabel(s), icon: "ph-barbell", color: "blue" },
+                            { id: 'coordination', name: "协调", score: c, grade: getGradeLabel(c), icon: "ph-person-simple-run", color: "green" },
+                            { id: 'endurance', name: "耐力", score: e, grade: getGradeLabel(e), icon: "ph-heartbeat", color: "rose" }
+                        ];
+                        // 升序排列，越小越弱
+                        const itemsSorted = [...items].sort((a, b) => a.score - b.score);
+                        const weakest = itemsSorted[0];
+
+                        // 5. 生成建议
+                        let advice = "";
+                        if (weakest.id === 'strength') {
+                            advice = "当前首要短板是【力量】。建议每周进行 2-4 次复合力量练习（如深蹲、硬拉、卧推等），每次 30-60 分钟。确保动作标准化，逐步增加负荷，优先级极高。";
+                        } else if (weakest.id === 'coordination') {
+                            advice = "当前首要短板是【协调】。建议每周 2-3 次核心稳定与敏捷训练（如敏捷梯、单腿平衡等），每次 20-40 分钟，注重神经肌肉控制的优化。";
+                        } else {
+                            advice = "当前首要短板是【耐力】。建议每周 2-5 次中低强度有氧（慢跑、骑行、游泳），逐步将时长从 20 分钟提升至 45-60 分钟，增强心肺功能。";
+                        }
+
+                        resolve({
+                            success: true,
+                            data: {
+                                raw: items,
+                                sorted: itemsSorted,
+                                weightedScore: weighted.toFixed(1),
+                                level: level,
+                                advice: advice
+                            }
+                        });
+                    }, 1200);
+                });
+            };
+
+            // 渲染图表条
+            const renderBars = (items) => {
+                const container = document.getElementById('barChartContainer');
+                container.innerHTML = ''; // 清空旧数据
+
+                // 为了保证固定顺序展示(力量、协调、耐力)，我们不排序原数组，使用传入的原始顺序
+                items.forEach(item => {
+                    const colorClasses = item.score >= 85 ? 'bg-green-500' : (item.score >= 60 ? 'bg-primary-500' : 'bg-red-400');
+                    const html = `
+                        <div>
+                            <div class="flex justify-between items-end mb-1.5">
+                                <span class="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                                    <i class="ph ${item.icon} text-gray-400"></i> ${item.name}
+                                </span>
+                                <span class="text-sm font-bold text-gray-900">${item.score} <span class="text-xs text-gray-400 font-normal">/100</span></span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden border border-gray-200/50">
+                                <div class="h-3.5 rounded-full ${colorClasses} progress-bar-fill shadow-inner" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+
+                // 延迟触发动画
+                setTimeout(() => {
+                    const bars = container.querySelectorAll('.progress-bar-fill');
+                    items.forEach((item, index) => {
+                        if(bars[index]) {
+                            bars[index].style.width = `${item.score}%`;
+                        }
+                    });
+                }, 100);
+            };
+
+            // 渲染短板列表
+            const renderWeakness = (sortedItems) => {
+                const container = document.getElementById('weaknessList');
+                container.innerHTML = '';
+                
+                sortedItems.forEach((item, index) => {
+                    // 第一个是最弱的，加重显示
+                    const isWeakest = index === 0;
+                    const dotClass = isWeakest ? 'bg-red-500 ring-4 ring-red-100' : 'bg-gray-300';
+                    const textClass = isWeakest ? 'text-red-900 font-bold' : 'text-red-700/70';
+                    const gradeClass = isWeakest ? 'bg-red-100 text-red-700' : 'bg-white/50 text-gray-500 border border-red-100/50';
+
+                    const html = `
+                        <li class="flex items-center justify-between p-3 rounded-xl ${isWeakest ? 'bg-white shadow-sm border border-red-100' : ''}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full ${dotClass}"></div>
+                                <span class="${textClass}">${index + 1}. ${item.name}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-sm ${isWeakest?'text-red-600 font-bold':'text-gray-500'}">${item.score.toFixed(1)}</span>
+                                <span class="text-xs px-2 py-1 rounded-md ${gradeClass}">${item.grade}</span>
+                            </div>
+                        </li>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            }
+
+            // 表单提交事件
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const s = document.getElementById('inputStrength').value;
+                const c = document.getElementById('inputCoord').value;
+                const en = document.getElementById('inputEndurance').value;
+
+                // UI 状态切换: Loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> <span>正在分析...</span>';
+                submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+                
+                emptyState.classList.add('hidden');
+                reportContainer.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+
+                // 发送数据到"后端"
+                const response = await mockSubmitAPI({ strength: s, coord: c, endurance: en });
+
+                // UI 状态切换: 渲染数据
+                if (response.success) {
+                    const data = response.data;
+                    
+                    // 填入核心数据
+                    document.getElementById('resTotalScore').innerText = data.weightedScore;
+                    document.getElementById('resLevel').innerText = `L${data.level}`;
+                    
+                    // 渲染图表和列表
+                    renderBars(data.raw);
+                    renderWeakness(data.sorted);
+                    document.getElementById('suggestionBox').innerHTML = `<p>${data.advice}</p>`;
+
+                    // 隐藏 loading，显示结果
+                    loadingState.classList.add('hidden');
+                    reportContainer.classList.remove('hidden');
+                    
+                    // 按钮复原
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="ph-bold ph-magic-wand"></i> <span>重新生成报告</span>';
+                    submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
