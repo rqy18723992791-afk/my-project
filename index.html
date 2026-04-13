@@ -166,7 +166,7 @@
                     </div>
                     <div className="w-[420px] p-10 glass rounded-[2.5rem] shadow-2xl relative z-10 animate-in">
                         <div className="text-center mb-8">
-                            <h1 className="text-3xl font-black tracking-tighter text-slate-800">小羽的自习室</h1>
+                            <h1 className="text-3xl font-black tracking-tighter text-slate-800">小羽书屋</h1>
                             <p className="text-slate-500 text-sm mt-2">{isRegister ? '新读者注册通道' : '数字化馆藏资源管理门户'}</p>
                         </div>
                         
@@ -277,7 +277,7 @@
                                  src="my-logo.png" 
                                  alt="Logo" 
                                  className="w-12 h-12 rounded-xl object-cover shadow-lg shadow-purple-100" />
-                                <h2 className="text-xl font-black tracking-tighter">小羽的自习室</h2>
+                                <h2 className="text-xl font-black tracking-tighter">小羽书屋</h2>
                         </div>
 
                         <div className="flex-1 space-y-1.5">
@@ -982,8 +982,8 @@
         // --- 基础组件 ---
 
         const NavBtn = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl font-bold transition-all ${active ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
-                <Icon name={icon} size={18} className={active ? 'text-purple-400' : ''} />
+            <button onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl font-bold transition-all ${active ? 'thu-purple text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+                <Icon name={icon} size={18} className={active ? 'text-white' : ''} />
                 <span className="text-sm">{label}</span>
             </button>
         );
